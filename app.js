@@ -83,15 +83,33 @@ discover.on('offline', function(hubInfo) {
 // Look for hubs:
 // Look for hubs:
 if (config.hubs && 0 < config.hubs.length) {
-  for (ip of config.hubs) {
-    console.log('Hub: ' + ip)
-    harmony(ip).then(function (client) {
-      findRemoteId(ip).then(function (remoteId) { startProcessing(remoteId, client) })
-    })
-  }
+  console.log('Processing hubs.');
+  processHubs(config.hubs);
 } else {
   console.log('Starting discovery.')
   discover.start()
+}
+
+async function processHubs(hubIPs) {
+  for (const ip of hubIPs) {
+    try {
+      console.log(`Verbinde mit Hub: ${ip}...`);
+
+      // 1. Verbindung aufbauen
+      const client = await harmony(ip);
+      
+      // 2. Remote-ID abrufen
+      const remoteId = await findRemoteId(ip);
+      
+      // 3. Verarbeitung starten
+      startProcessing(remoteId, client);
+      
+      console.log(`Verarbeitung für Hub ${ip} erfolgreich gestartet.`);
+    } catch (error) {
+      // Fehlerbehandlung pro Hub, damit ein Fehler nicht die ganze Schleife stoppt
+      console.error(`Fehler bei Hub ${ip}:`, error.message);
+    }
+  }
 }
 
 async function findRemoteId(ip){
