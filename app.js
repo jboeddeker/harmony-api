@@ -81,8 +81,28 @@ discover.on('offline', function(hubInfo) {
 })
 
 // Look for hubs:
-console.log('Starting discovery.')
-discover.start()
+// Look for hubs:
+if (config.hubs && 0 < config.hubs.length) {
+  for (ip of config.hubs) {
+    console.log('Hub: ' + ip)
+    harmony(ip).then(function (client) {
+      findRemoteId(ip).then(function (remoteId) { startProcessing(remoteId, client) })
+    })
+  }
+} else {
+  console.log('Starting discovery.')
+  discover.start()
+}
+
+async function findRemoteId(ip){
+  url = "http://" + ip + ':8088'
+  body = {"id ": 1,  "cmd": "setup.account?getProvisionInfo",  "params": {}}
+  headers = {headers: 
+    {'Accept-Charset': 'utf-8', 'Content-Type': 'application/json', 'Origin': 'http://sl.dhg.myharmony.com'}
+  }
+  res = await axios.post(url, body, headers);
+  return res.data.data.activeRemoteId
+}
 
 // mqtt api
 
